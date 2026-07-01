@@ -1,0 +1,19 @@
+# ========== DATA ==========
+1_data/
+data/
+6_outputs/
+logs/
+
+# ========== ENV ==========
+.env/
+.streamlit/
+.venv/
+
+# ========== SYSTEM ==========
+.DS_Store
+.idea/
+.vscode/
+
+# ========== PYTHON ==========
+__pycache__/
+*.pyc
