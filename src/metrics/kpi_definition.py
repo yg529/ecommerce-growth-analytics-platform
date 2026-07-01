@@ -1,55 +1,50 @@
 import pandas as pd
 
-# 基础 KPI
-def compute_basic_kpi(df):
-    kpi = {}
 
-    # 用户数
-    kpi["uv"] = df["visitorid"].nunique()
+def compute_basic_kpi(df: pd.DataFrame) -> dict:
+    """Compute core traffic and buyer metrics."""
+    uv = df["visitorid"].nunique()
+    events = len(df)
+    buyers = df.loc[df["event"] == "transaction", "visitorid"].nunique()
 
-    # 行为总量
-    kpi["events"] = len(df)
+    return {
+        "uv": uv,
+        "events": events,
+        "buyers": buyers,
+        "avg_events_per_user": events / uv if uv else 0,
+        "buyer_conversion_rate": buyers / uv if uv else 0,
+    }
 
-    # 每用户行为数
-    kpi["avg_events_per_user"] = kpi["events"] / kpi["uv"]
 
-    return kpi
+def compute_dau(df: pd.DataFrame) -> pd.Series:
+    """Compute daily active users."""
+    daily = df.copy()
+    daily["date"] = daily["timestamp"].dt.date
+    return daily.groupby("date")["visitorid"].nunique()
 
-# DAU
-def compute_dau(df):
-    df = df.copy()
-    df["date"] = df["timestamp"].dt.date
 
-    dau = df.groupby("date")["visitorid"].nunique()
+def compute_cvr(df: pd.DataFrame) -> float:
+    """Compute buyer conversion rate among users with at least one view."""
+    users_view = set(df.loc[df["event"] == "view", "visitorid"])
+    users_buy = set(df.loc[df["event"] == "transaction", "visitorid"])
+    return len(users_buy) / len(users_view) if users_view else 0
 
-    return dau
 
-# 转化率 CVR
-def compute_cvr(df):
-    users_view = set(df[df["event"] == "view"]["visitorid"])
-    users_buy = set(df[df["event"] == "transaction"]["visitorid"])
+def compute_event_funnel(df: pd.DataFrame) -> dict:
+    """Compute event-level user counts and simple set-based conversion rates."""
+    view_users = set(df.loc[df["event"] == "view", "visitorid"])
+    cart_users = set(df.loc[df["event"] == "addtocart", "visitorid"])
+    buy_users = set(df.loc[df["event"] == "transaction", "visitorid"])
 
-    cvr = len(users_buy) / len(users_view) if len(users_view) > 0 else 0
-
-    return cvr
-
-# funnel KPI
-def compute_funnel(df):
-    view_users = set(df[df["event"] == "view"]["visitorid"])
-    cart_users = set(df[df["event"] == "addtocart"]["visitorid"])
-    buy_users = set(df[df["event"] == "transaction"]["visitorid"])
-
-    funnel = {
+    return {
         "view": len(view_users),
         "cart": len(cart_users),
         "buy": len(buy_users),
-
-        "view_to_cart": len(cart_users) / len(view_users),
-        "cart_to_buy": len(buy_users) / len(cart_users),
+        "view_to_cart": len(cart_users) / len(view_users) if view_users else 0,
+        "cart_to_buy": len(buy_users) / len(cart_users) if cart_users else 0,
     }
 
-    return funnel
 
-# 商品 TOP 分析
-def top_items(df, n=10):
-    return df[df["event"] == "view"]["itemid"].value_counts().head(n)
+def top_items(df: pd.DataFrame, n: int = 10) -> pd.Series:
+    """Return top viewed items."""
+    return df.loc[df["event"] == "view", "itemid"].value_counts().head(n)

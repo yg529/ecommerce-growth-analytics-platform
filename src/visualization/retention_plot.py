@@ -1,6 +1,7 @@
-import os
-import pandas as pd
+from pathlib import Path
+
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 
 from src.core.config import FIGURE_DIR
@@ -8,48 +9,43 @@ from src.core.config import FIGURE_DIR
 
 def plot_retention_heatmap(
     matrix,
-    save=False,
-    max_cohort=40
+    save: bool = False,
+    save_path: str | Path | None = None,
+    max_cohort: int = 40,
 ):
-    """
-    绘制用户留存热力图
-    """
+    """Create a retention heatmap and return the Matplotlib figure."""
+    display_matrix = matrix.copy().iloc[:max_cohort]
 
-    # 不修改原数据
-    matrix = matrix.copy()
+    if not display_matrix.empty:
+        display_matrix.index = pd.to_datetime(display_matrix.index).strftime("%Y-%m-%d")
 
-    # 只展示前40个 Cohort（GitHub 展示更美观）
-    matrix = matrix.iloc[:max_cohort]
+    fig, ax = plt.subplots(figsize=(12, 8))
 
-    # 日期格式化
-    matrix.index = pd.to_datetime(matrix.index).strftime("%Y-%m-%d")
-
-    plt.figure(figsize=(12, 8))
-
-    sns.heatmap(
-        matrix,
-        cmap="Blues",
-        vmin=0,
-        vmax=0.06,          # RetailRocket 留存率较低
-        linewidths=0.3,
-        cbar=True,
-        annot=False
-    )
-
-    plt.title("User Retention Heatmap", fontsize=14)
-    plt.xlabel("Retention Day")
-    plt.ylabel("Cohort Date")
-
-    plt.tight_layout()
-
-    if save:
-        os.makedirs(FIGURE_DIR, exist_ok=True)
-
-        plt.savefig(
-            FIGURE_DIR / "02_retention_heatmap.png",
-            dpi=300,
-            bbox_inches="tight"
+    if display_matrix.empty:
+        ax.text(0.5, 0.5, "No retention data", ha="center", va="center")
+        ax.set_axis_off()
+    else:
+        vmax = max(0.06, display_matrix.max().max())
+        sns.heatmap(
+            display_matrix,
+            cmap="Blues",
+            vmin=0,
+            vmax=vmax,
+            linewidths=0.3,
+            cbar=True,
+            annot=False,
+            ax=ax,
         )
 
-    plt.show()
-    plt.close()
+        ax.set_xlabel("Retention Day")
+        ax.set_ylabel("Cohort Date")
+
+    ax.set_title("User Retention Heatmap", fontsize=14)
+    fig.tight_layout()
+
+    if save or save_path:
+        output_path = Path(save_path) if save_path else FIGURE_DIR / "02_retention_heatmap.png"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(output_path, dpi=300, bbox_inches="tight")
+
+    return fig

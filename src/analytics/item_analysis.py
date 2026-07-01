@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from src.core.validation import validate_events
@@ -81,11 +82,11 @@ def item_conversion_analysis(df, min_views=100):
 
     summary["cart_to_buy"] = (
         summary["buyers"] / summary["carts"]
-    ).fillna(0)
+    ).replace([np.inf, -np.inf], 0).fillna(0)
 
     summary["view_to_buy"] = (
         summary["buyers"] / summary["views"]
-    )
+    ).replace([np.inf, -np.inf], 0).fillna(0)
 
     summary = (
         summary
@@ -121,8 +122,9 @@ def classify_items(df):
         "transaction": "buyers"
     })
 
-    summary["view_to_buy"] = summary["buyers"] / summary["views"]
-    summary["view_to_buy"] = summary["view_to_buy"].fillna(0)
+    summary["view_to_buy"] = (
+        summary["buyers"] / summary["views"]
+    ).replace([np.inf, -np.inf], 0).fillna(0)
 
     # ====== 中位数 ======
     views_median = summary["views"].median()

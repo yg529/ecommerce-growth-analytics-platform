@@ -1,67 +1,75 @@
+import sys
+from pathlib import Path
+
 import pandas as pd
-import os
 
-# 读取数据 + 统一字段
-def load_raw_events(path):
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
+
+from src.core.config import PROCESSED_DATA_PATH, RAW_DATA_PATH
+from src.core.data_loader import EVENT_COLUMNS
+
+
+def load_raw_events(path: str | Path) -> pd.DataFrame:
     df = pd.read_csv(path)
-    df.columns = ["timestamp", "visitorid", "event", "itemid", "transactionid"]
+    df.columns = EVENT_COLUMNS
     return df
 
 
-# 时间字段转换
-def convert_time(df):
-    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
-    return df
+def convert_time(df: pd.DataFrame) -> pd.DataFrame:
+    cleaned = df.copy()
+    cleaned["timestamp"] = pd.to_datetime(cleaned["timestamp"], unit="ms")
+    return cleaned
 
 
-# 去重
-def drop_duplicates(df):
+def drop_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     return df.drop_duplicates()
 
 
-# 处理缺失值
-def handle_missing(df):
+def handle_missing(df: pd.DataFrame) -> pd.DataFrame:
     return df.dropna(subset=["visitorid", "event", "itemid"])
 
 
-# event标准化
-def normalize_event(df):
-    df["event"] = df["event"].str.lower()
-    valid_events = ["view", "addtocart", "transaction"]
-    return df[df["event"].isin(valid_events)]
+def normalize_event(df: pd.DataFrame) -> pd.DataFrame:
+    cleaned = df.copy()
+    cleaned["event"] = cleaned["event"].str.lower()
+    valid_events = {"view", "addtocart", "transaction"}
+    return cleaned[cleaned["event"].isin(valid_events)]
 
 
-# 排序
-def sort_events(df):
+def sort_events(df: pd.DataFrame) -> pd.DataFrame:
     return df.sort_values(["visitorid", "timestamp"])
 
 
-# 主清洗流程
-def clean_events(path):
+def clean_events(path: str | Path) -> pd.DataFrame:
     df = load_raw_events(path)
     df = convert_time(df)
     df = drop_duplicates(df)
     df = handle_missing(df)
     df = normalize_event(df)
-    df = sort_events(df)
-    return df
+    return sort_events(df)
 
 
-# 保存
-def save_clean(df, output_path):
-    # 自动创建目录（关键）
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    df.to_csv(output_path, index=False)
+def save_clean(df: pd.DataFrame, output_path: str | Path) -> Path:
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path, index=False)
+    return path
 
 
-# pipeline入口
-if __name__ == "__main__":
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    raw_path = os.path.join(BASE_DIR, "1_data", "raw", "events.csv")
-    PROCESSED_PATH = "1_data/processed"
-    output_path = os.path.join(BASE_DIR, "1_data", "processed", "events_clean.csv")
+def main():
+    if not RAW_DATA_PATH.exists():
+        raise FileNotFoundError(
+            f"Raw file not found: {RAW_DATA_PATH}. "
+            "Download RetailRocket events.csv into 1_data/raw/."
+        )
 
-    df = clean_events(raw_path)
+    output_path = PROCESSED_DATA_PATH / "events_clean.csv"
+    df = clean_events(RAW_DATA_PATH)
     save_clean(df, output_path)
+    print(f"Cleaning done: {df.shape}, saved to {output_path}")
 
-    print("cleaning done:", df.shape)
+
+if __name__ == "__main__":
+    main()

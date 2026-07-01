@@ -1,112 +1,102 @@
 import pandas as pd
 
 
+def _rate(rates: dict, *keys: str) -> float:
+    for key in keys:
+        if key in rates:
+            return rates[key]
+    return 0
+
+
 def generate_funnel_insight(funnel: dict, rates: dict) -> list:
-    """
-    漏斗分析洞察
-    """
-
+    """Generate rule-based funnel insights."""
     insights = []
+    view_cart = _rate(rates, "view_to_addtocart", "view_to_cart")
+    cart_buy = _rate(rates, "addtocart_to_transaction", "cart_to_buy")
+    view_buy = _rate(rates, "view_to_transaction", "view_to_buy")
 
-    view = funnel.get("view", 0)
-    cart = funnel.get("addtocart", 0)
-    buy = funnel.get("transaction", 0)
+    if funnel.get("view", 0) == 0:
+        return ["No view events were found, so funnel conversion cannot be evaluated."]
 
-    view_cart = rates.get("view_to_cart", 0)
-    cart_buy = rates.get("cart_to_buy", 0)
-    view_buy = rates.get("view_to_buy", 0)
-
-    # 转化判断
     if view_cart < 0.1:
         insights.append(
-            "View → Cart 转化率较低，说明商品吸引力不足或推荐不精准。建议优化推荐算法或商品展示策略。"
+            "View-to-cart conversion is low. Review product detail pages, traffic quality and recommendation relevance."
         )
 
     if cart_buy < 0.2:
         insights.append(
-            "Cart → Purchase 转化率较低，说明用户在结算阶段流失严重，可能存在价格、支付或信任问题。"
+            "Cart-to-purchase conversion is low. Check checkout friction, pricing, shipping and trust signals."
         )
 
     if view_buy < 0.02:
         insights.append(
-            "Overall 转化率偏低，建议优化整体购物路径（首页 → 商品页 → 结算）。"
+            "End-to-end purchase conversion is low. The largest drop-off stage should be prioritized first."
         )
 
-    if not insights:
-        insights.append("✔ Funnel 转化表现正常，无明显瓶颈。")
-
-    return insights
+    return insights or ["Funnel conversion has no obvious rule-based warning."]
 
 
 def generate_retention_insight(matrix: pd.DataFrame) -> list:
-    """
-    留存分析洞察
-    """
-
-    insights = []
-
+    """Generate retention insights from a cohort matrix."""
     if matrix.empty:
-        return ["留存数据为空"]
+        return ["Retention matrix is empty."]
 
-    day1 = matrix.get(1, pd.Series()).mean() if 1 in matrix.columns else 0
-    day7 = matrix.get(7, pd.Series()).mean() if 7 in matrix.columns else 0
+    day1 = matrix[1].mean() if 1 in matrix.columns else 0
+    day7 = matrix[7].mean() if 7 in matrix.columns else 0
+    insights = []
 
     if day1 < 0.2:
         insights.append(
-            "Day 1 留存偏低，新用户体验可能存在问题（注册/引导流程需优化）。"
+            "Day-1 retention is weak. New-user activation and first-session value should be reviewed."
         )
 
     if day7 < 0.05:
         insights.append(
-            "Day 7 留存较低，用户粘性不足，需要加强内容/推荐/激励机制。"
+            "Day-7 retention is low. Consider lifecycle messages, repeat-visit triggers and better personalization."
         )
 
     if day1 >= 0.3:
-        insights.append("✔ Day 1 留存表现良好，用户初始体验较好。")
+        insights.append("Day-1 retention is relatively healthy for this dataset.")
 
-    return insights
+    return insights or ["Retention has no obvious rule-based warning."]
 
 
 def generate_rfm_insight(summary: dict) -> list:
-    """
-    RFM用户分层洞察
-    """
-
-    insights = []
+    """Generate user-segment insights from RFM summary counts."""
+    if not summary:
+        return ["No transaction users were found, so RFM segments are unavailable."]
 
     champions = summary.get("Champions", 0)
     at_risk = summary.get("At Risk", 0)
     loyal = summary.get("Loyal Users", 0)
-
-    total = sum(summary.values()) if summary else 1
+    total = sum(summary.values())
+    insights = []
 
     if at_risk / total > 0.5:
         insights.append(
-            "流失用户占比过高，建议启动召回策略（优惠券/Push/邮件营销）。"
+            "At-risk users dominate transaction users. Win-back campaigns should be tested."
         )
 
     if champions / total < 0.1:
         insights.append(
-            "高价值用户占比低，说明用户质量不足或产品缺乏核心吸引力。"
+            "Champion users are limited. Increase repeat purchase incentives for recent buyers."
         )
 
     if loyal / total > 0.3:
-        insights.append("忠诚用户占比良好，具备稳定用户基础。")
+        insights.append("Loyal users form a meaningful segment and can support retention programs.")
 
-    return insights
+    return insights or ["RFM distribution has no obvious rule-based warning."]
 
 
-def business_insight_pipeline(funnel, rates, retention_matrix, rfm_summary) -> dict:
-    """
-    总洞察生成器
-    """
-
-    funnel_insights = generate_funnel_insight(funnel, rates)
-    retention_insights = generate_retention_insight(retention_matrix)
-    rfm_insights = generate_rfm_insight(rfm_summary)
-
+def business_insight_pipeline(
+    funnel: dict,
+    rates: dict,
+    retention_matrix: pd.DataFrame,
+    rfm_summary: dict,
+) -> dict:
+    """Generate all dashboard insight blocks."""
     return {
-        "funnel_insights": funnel_insights,
-        "retention_insights": retention_insights,
-        "rfm_insights": rfm_insights
+        "funnel_insights": generate_funnel_insight(funnel, rates),
+        "retention_insights": generate_retention_insight(retention_matrix),
+        "rfm_insights": generate_rfm_insight(rfm_summary),
     }

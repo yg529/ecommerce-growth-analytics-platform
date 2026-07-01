@@ -5,8 +5,7 @@ echo ==========================
 echo RetailRocket Dashboard
 echo ==========================
 
-pip install -r requirements.txt
-
-streamlit run 4_app/app.py
+py -m pip install -r requirements.txt
+py -m streamlit run 4_app/app.py
 
 pause

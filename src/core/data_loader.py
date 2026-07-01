@@ -1,48 +1,49 @@
+from pathlib import Path
+
 import pandas as pd
 
-from src.core.config import (
-    RAW_DATA_PATH,
-    PROCESSED_DATA_PATH
-)
+from src.core.config import PROCESSED_DATA_PATH, RAW_DATA_PATH
 
 
-def load_raw_events():
-    """
-    读取原始行为数据
-    """
+EVENT_COLUMNS = [
+    "timestamp",
+    "visitorid",
+    "event",
+    "itemid",
+    "transactionid",
+]
 
-    df = pd.read_csv(
-        RAW_DATA_PATH / "events.csv"
-    )
 
-    df.columns = [
-        "timestamp",
-        "visitorid",
-        "event",
-        "itemid",
-        "transactionid"
-    ]
+def load_raw_events(path: str | Path | None = None) -> pd.DataFrame:
+    """Load the original RetailRocket events file."""
+    csv_path = Path(path) if path is not None else RAW_DATA_PATH
 
-    df["timestamp"] = pd.to_datetime(
-        df["timestamp"],
-        unit="ms"
-    )
+    if not csv_path.exists():
+        raise FileNotFoundError(
+            f"Raw events file not found: {csv_path}. "
+            "Download events.csv and place it under 1_data/raw/."
+        )
 
+    df = pd.read_csv(csv_path)
+    df.columns = EVENT_COLUMNS
+    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
     return df
 
 
-def load_clean_events():
-    """
-    读取清洗后的行为数据
-    """
-
-    df = pd.read_csv(
-        PROCESSED_DATA_PATH / "events_clean.csv"
+def load_clean_events(path: str | Path | None = None) -> pd.DataFrame:
+    """Load cleaned events produced by src/preprocessing/clean_events.py."""
+    csv_path = (
+        Path(path)
+        if path is not None
+        else PROCESSED_DATA_PATH / "events_clean.csv"
     )
 
-    # CSV读取后恢复时间类型
-    df["timestamp"] = pd.to_datetime(
-        df["timestamp"]
-    )
+    if not csv_path.exists():
+        raise FileNotFoundError(
+            f"Clean events file not found: {csv_path}. "
+            "Run `python src/preprocessing/clean_events.py` first."
+        )
 
+    df = pd.read_csv(csv_path)
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
     return df

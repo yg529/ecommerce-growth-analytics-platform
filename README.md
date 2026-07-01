@@ -1,101 +1,90 @@
-RetailRocket 增长分析平台
-RetailRocket Growth Analytics Platform
+# RetailRocket Growth Analytics Platform
 
-# 项目简介
-本项目基于 RetailRocket 电商用户行为数据集，构建一个端到端的用户增长分析与商业决策支持系统。
-实现从 数据处理 → 指标体系 → 用户分析 → 可视化BI → 自动化报告输出 的完整数据分析闭环。
-该项目模拟真实互联网公司增长分析场景，可用于产品、运营与数据分析决策支持。
+基于 RetailRocket 电商用户行为数据集的增长分析项目，覆盖数据清洗、KPI 总览、转化漏斗、Cohort 留存、RFM 用户分层、商品转化分析、Streamlit Dashboard 和自动化 Markdown/PDF 报告。
 
-# 项目亮点
-1.企业级数据分析工程化结构（非Notebook）
-2.完整用户增长分析体系（KPI / Funnel / Retention / RFM）
-3.模块化设计（可扩展 analytics / metrics / visualization / pipeline）
-4.Streamlit 交互式BI数据大屏
-5.自动化分析流程（Pipeline一键运行）
-6.自动生成业务分析报告（PDF）
-7.内置业务洞察模块（Business Insight Engine）
+这个项目适合作为数据分析、产品分析、商业分析实习/初级岗位的作品集项目。当前重点是可复现的数据分析流程和可解释的业务指标，不定位为生产级系统。
 
-# 技术栈
-Python 3.11
-Pandas / NumPy
-Streamlit
-Plotly / Matplotlib / Seaborn
-Scikit-learn（用户分群）
-ReportLab（PDF报告生成）
+## 功能状态
 
-# 项目结构
-data-analysis-retailrocket/
-│
-├── 4_app/                 # Streamlit 可视化大屏
-├── src/                   # 核心分析代码
-│   ├── core/              # 数据加载 / 配置 / 工具
-│   ├── preprocessing/     # 数据清洗
-│   ├── metrics/           # KPI指标体系
-│   ├── analytics/         # 核心分析模块
-│   ├── visualization/     # 可视化模块
-│   ├── insights/          # 业务洞察
-│
-├── 5_pipeline/            # 自动化流程
-├── 1_data/                # 原始数据
-├── 6_outputs/             # 输出结果（图表/报告）
-├── tests/                 # 单元测试
+| 模块 | 状态 | 说明 |
+| --- | --- | --- |
+| 数据清洗 | 已完成 | 读取 `events.csv`，完成时间转换、去重、缺失值处理、事件标准化和排序 |
+| KPI 总览 | 已完成 | UV、事件数、商品数、购买用户数、购买转化率 |
+| 漏斗分析 | 已完成 | 按用户行为顺序计算 View -> Add to Cart -> Transaction |
+| 留存分析 | 已完成 | Cohort 留存矩阵和热力图 |
+| RFM 分析 | 已完成 | RetailRocket 没有金额字段，Monetary 使用交易次数代理 |
+| 商品分析 | 已完成 | 商品浏览、加购、购买、转化率和分层 |
+| Streamlit Dashboard | 已完成 | 多模块交互式看板 |
+| 自动报告 | 已完成 | 输出 Markdown，并导出基础 PDF |
+| 类目分析 / 路径分析 | 未完成 | 数据集包含相关数据，但当前版本未纳入主流程 |
+
+## 数据来源
+
+数据集：RetailRocket Ecommerce Dataset  
+下载地址：https://www.kaggle.com/datasets/retailrocket/ecommerce-dataset
+
+当前仓库不提交原始数据和清洗后数据。下载后请放置：
+
+```text
+1_data/
+  raw/
+    events.csv
+```
+
+## 快速开始
+
+```powershell
+py -m pip install -r requirements.txt
+py src/preprocessing/clean_events.py
+py -m streamlit run 4_app/app.py
+```
+
+清洗脚本会生成：
+
+```text
+1_data/
+  processed/
+    events_clean.csv
+```
+
+## 运行测试
+
+```powershell
+py -m pytest
+```
+
+测试使用小型内存样本，不依赖本地 Kaggle 数据文件。
+
+## 项目结构
+
+```text
+.
+├── 2_notebooks/          # 探索和结果展示
+├── 4_app/                # Streamlit Dashboard
+├── src/
+│   ├── analytics/        # 漏斗、留存、RFM、商品分析
+│   ├── core/             # 配置、数据加载、校验、日志
+│   ├── insights/         # 规则化业务洞察
+│   ├── pipeline/         # Dashboard 内的一键分析流程
+│   ├── preprocessing/    # 数据清洗
+│   ├── report/           # Markdown/PDF 报告
+│   └── visualization/    # 图表函数
+├── tests/                # pytest 单元测试
 ├── requirements.txt
-├── run.bat
 └── README.md
+```
 
-# 核心功能模块
-1️.KPI指标体系
-UV / PV
-购买用户数
-转化率
-加购率
-2️.漏斗分析（Funnel Analysis）
-View → Add to Cart → Purchase
-转化率计算
-流失分析
-3️.留存分析（Retention Analysis）
-Cohort留存矩阵
-留存热力图
-用户生命周期分析
-4️.RFM用户分层
-Recency / Frequency / Monetary
-用户价值分层（高价值 / 沉睡 / 流失用户）
-5️.商品分析（Item Analysis）
-热门商品排行
-高转化商品
-商品行为分析
-6️.BI数据大屏
-KPI总览
-Funnel可视化
-留存热力图
-RFM用户分群
-7️.自动化报告系统
-自动生成业务分析报告
-支持PDF导出
-一键下载
-8.商业价值
+## 简历表述建议
 
-本项目模拟真实电商增长分析场景，可用于：
+可以写：
 
-用户增长分析
-电商运营决策支持
-产品优化分析
-数据驱动业务决策
-用户流失分析
-项目运行方式
-1️.安装依赖
-pip install -r requirements.txt
-2️.启动项目
-streamlit run 4_app/app.py
-或一键启动
-run.bat
+> 基于 RetailRocket 用户行为数据构建电商增长分析 Dashboard，完成数据清洗、KPI 指标、转化漏斗、Cohort 留存、RFM 用户分层和商品转化分析，并通过 Streamlit 输出交互式看板与自动化分析报告。
 
-# 项目定位
-本项目定位为：企业级电商用户增长分析平台（Growth Analytics System）
-适用于：
-数据分析岗位（校招 / 实习 / 初级）
-产品分析岗位
-数据科学入门项目展示
+不建议写“企业级平台”或“生产级 BI 系统”，除非后续补充部署、权限、调度、监控和数据仓库层。
 
-# 作者说明
-本项目用于数据分析能力展示，涵盖数据处理、指标体系构建、用户行为分析及商业洞察生成的完整流程。
+## 已知限制
+
+- RetailRocket 数据没有订单金额字段，因此 RFM 的 Monetary 使用交易次数代理。
+- PDF 报告是基础文本导出，不包含完整图表排版。
+- 当前主流程只使用 `events.csv`，尚未整合 `item_properties.csv` 和 `category_tree.csv`。
+- Dashboard 依赖本地清洗后的 `events_clean.csv`，首次运行前必须先执行清洗脚本。

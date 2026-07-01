@@ -1,22 +1,19 @@
 import matplotlib.pyplot as plt
 
 
-def plot_conversion(rate):
-
+def plot_conversion(rate: dict):
+    """Create a conversion-rate bar chart and return the figure."""
     names = list(rate.keys())
-    values = [v * 100 for v in rate.values()]
+    values = [value * 100 for value in rate.values()]
 
-    plt.figure(figsize=(8,5))
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.bar(names, values)
+    ax.set_ylabel("Conversion Rate (%)")
+    ax.set_title("Conversion Rate")
+    ax.tick_params(axis="x", rotation=20)
 
-    plt.bar(names, values)
+    for index, value in enumerate(values):
+        ax.text(index, value, f"{value:.2f}%", ha="center", va="bottom")
 
-    plt.ylabel("Conversion Rate (%)")
-
-    plt.title("Conversion Rate")
-
-    for i, v in enumerate(values):
-        plt.text(i, v, f"{v:.2f}%")
-
-    plt.tight_layout()
-
-    plt.show()
+    fig.tight_layout()
+    return fig
