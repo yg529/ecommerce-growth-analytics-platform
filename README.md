@@ -74,14 +74,6 @@ py -m pytest
 └── README.md
 ```
 
-## 简历表述建议
-
-可以写：
-
-> 基于 RetailRocket 用户行为数据构建电商增长分析 Dashboard，完成数据清洗、KPI 指标、转化漏斗、Cohort 留存、RFM 用户分层和商品转化分析，并通过 Streamlit 输出交互式看板与自动化分析报告。
-
-不建议写“企业级平台”或“生产级 BI 系统”，除非后续补充部署、权限、调度、监控和数据仓库层。
-
 ## 已知限制
 
 - RetailRocket 数据没有订单金额字段，因此 RFM 的 Monetary 使用交易次数代理。
